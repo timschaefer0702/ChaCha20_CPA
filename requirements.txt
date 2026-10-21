@@ -1,0 +1,7 @@
+chipwhisperer==6.0.0
+pycryptodome
+numpy
+matplotlib
+tqdm
+ipywidgets
+jupyterlab
