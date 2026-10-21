@@ -1,0 +1,20 @@
+# --- Firmware build output (make PLATFORM=CWLITEARM) ---
+# The .hex is kept so the target can be flashed without building.
+objdir-*/
+*.o
+*.lst
+*.elf
+*.bin
+*.eep
+*.lss
+*.map
+*.sym
+Makefile.platform
+
+# --- Jupyter / Python ---
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# --- macOS ---
+.DS_Store
