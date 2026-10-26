@@ -51,6 +51,12 @@ Dann `Jupyter/user/ChaCha20 - Test (HARDWARE).ipynb` öffnen und alle Zellen
 ausführen. Das Notebook baut die Firmware selbst (`make` in
 `firmware/mcu/simpleserial-chacha20`) und flasht sie auf das Target.
 
+Für die **nächste unabhängige CPA-Messreihe** zuerst das
+[Validierungsprotokoll](docs/CPA-Validierungsprotokoll.md) lesen. Die vorbereitete
+Aufnahme speichert einen neuen Datensatz und den Testschlüssel getrennt; die
+bestehenden Traces bleiben erhalten. Die festgelegte Offline-Auswertung steht in
+[`Jupyter/user/cpa_frozen.py`](Jupyter/user/cpa_frozen.py).
+
 Firmware manuell bauen:
 
 ```bash

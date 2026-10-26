@@ -24,3 +24,7 @@ __pycache__/
 
 # --- codex ---
 .codex/
+
+# --- unabhängige CPA-Prüfung: bis zur Auswertung lokal behalten ---
+Jupyter/user/chacha20_traces_validation.npz
+Jupyter/user/chacha20_validation_key.bin
