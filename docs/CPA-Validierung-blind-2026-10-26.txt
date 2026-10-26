@@ -1,0 +1,13 @@
+Messmetadaten: 2026-10-26T18:34:24.868000+00:00 ADC 29538459.0 Hz, Target-Takt 7384615.384615385 Hz
+Hauptauswertung: feste Samples (726, 1069, 1262, 1518)
+Punkt
+Wort 0, Sample 726: S 45e66ff7/ba199008, K e475f792/58a917a3, Score Training/Test +0.854/+0.863
+Wort 1, Sample 1069: S 72d9ccc9/8d263336, K 3fb9685b/5a05cec8, Score Training/Test +0.710/+0.719
+Wort 2, Sample 1262: S 40f148c8/bf0eb737, K c78f1b96/45ac8a05, Score Training/Test -0.786/-0.744
+Wort 3, Sample 1518: S 5196778f/ae698870, K e676121b/434922fc, Score Training/Test -0.842/-0.871
+Fenster ±4
+Wort 0, Sample 726: S 45e66ff7/ba199008, K e475f792/58a917a3, Score Training/Test +4.784/+4.769
+Wort 1, Sample 1069: S 72d9ccc9/8d263336, K 3fb9685b/5a05cec8, Score Training/Test +2.010/+2.029
+Wort 2, Sample 1262: S 40f148ca/bf0eb735, K c78f1b98/45ac8a03, Score Training/Test +5.103/+4.563
+Wort 3, Sample 1518: S 5196770f/ae6988f0, K e676119b/4349237c, Score Training/Test +4.128/+4.343
+Beide Kandidatenlisten sind ausgewählt; erst jetzt erfolgt optional die Erfolgskontrolle.
