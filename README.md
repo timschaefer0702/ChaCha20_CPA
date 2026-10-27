@@ -9,8 +9,11 @@ Jupyter-Notebook zum Bauen, Flashen, Validieren und Aufnehmen von Traces.
 ```
 Jupyter/
   Setup_Scripts/Setup_Generic.ipynb      # Scope/Target-Setup (aus ChipWhisperer)
-  user/ChaCha20 - Test (HARDWARE).ipynb  # Test-Notebook
+  user/ChaCha20 - Test (HARDWARE).ipynb  # Test-Notebook + CPA-Angriff (§7)
   user/chacha20_traces.npz               # aufgenommene Traces
+  user/ChaCha20_CPA_Erklaerung.md        # Erklärung + Visualisierung der CPA
+  user/make_cpa_figures.py               # erzeugt die Abbildungen (cpa_figures/)
+  user/cpa_figures/                      # PNGs zur Erklärung
 firmware/mcu/
   simpleserial-chacha20/                 # eigene Firmware
     chacha20.c/.h                        # ChaCha20 (github.com/shiffthq/chacha20)
@@ -57,6 +60,19 @@ Firmware manuell bauen:
 cd firmware/mcu/simpleserial-chacha20
 make
 ```
+
+## CPA-Angriff
+
+Sektion **7** des Notebooks führt eine Correlation Power Analysis auf die erste
+ChaCha20-Runde durch und gewinnt den **vollständigen 256-bit-Schlüssel** aus 1000
+Traces zurück (unabhängig per Re-Encrypt gegen gespeichertes `(pt, ct)` bestätigt):
+
+- **Stufe 1 (XOR):** obere Key-Wörter `s[4..7]` über das Vorzeichen der Bit-Korrelation
+- **Stufe 2 (ADD):** untere Key-Wörter `s[8..11]` bitweise LSB→MSB mit Carry
+
+Ausführliche Erklärung mit Abbildungen:
+[`Jupyter/user/ChaCha20_CPA_Erklaerung.md`](Jupyter/user/ChaCha20_CPA_Erklaerung.md).
+Die Analyse-Sektion lädt nur `chacha20_traces.npz` und läuft offline (ohne Hardware).
 
 ## SimpleSerial-Befehle (SimpleSerial 1.1)
 
