@@ -190,3 +190,115 @@ Abbildungen liegen in [`cpa_figures/`](./cpa_figures/) und werden von
 [`make_cpa_figures.py`](./make_cpa_figures.py) aus denselben Formeln erzeugt, die auch
 das Notebook verwendet. Nach einem erneuten Capture (mehr Traces) einfach das Skript
 neu laufen lassen — die Abbildungen aktualisieren sich.
+
+---
+
+## 11. Didaktischer Durchgang im Stil der Vorlesung (1–3)
+
+Dieser Abschnitt rekapituliert den Angriff entlang des **allgemeinen CPA-Rezepts aus
+Vorlesung 3** und begründet jeden Schritt. Er zeigt, *was* aus der Vorlesung direkt
+übernommen wird und *wo* ChaCha20 (ARX, keine S-Box) eine eigene Herleitung erzwingt.
+
+**Was aus den drei Vorlesungen einfließt:**
+
+→ **Vorlesung 1** — Leckage-Physik: CMOS verbraucht beim Schalten Strom, deshalb hängt
+  der Verbrauch von den Daten ab. Einfaches Modell: **Hamming-Weight (HW)** / Hamming-
+  Distance (HD).
+→ **Vorlesung 2** — Statistik: Messung = Nutzsignal + normalverteiltes Rauschen; der
+  Zusammenhang Modell ↔ Messung wird mit **Pearsons Korrelationskoeffizient** `r`
+  gemessen (`−1 ≤ r ≤ 1`, Vorzeichen = Richtung). CPA-Idee: die richtige Hypothese
+  korreliert am stärksten.
+→ **Vorlesung 3** — das **5-Schritt-Rezept** (unten) plus der zentrale Hinweis, dass der
+  Angriffspunkt **implementierungsspezifisch angepasst** werden muss.
+
+### Das Rezept (Vorlesung 3) und seine Anwendung
+
+**Schritt 1 — Geeigneten Zwischenwert wählen.**
+
+→ Vorlesungsregel: ein Zwischenwert, der (a) nur von einem **Teil** des Keys abhängt
+  (sonst 2¹²⁸ Hypothesen), (b) aus **bekannter Ein- oder Ausgabe** berechenbar ist, und
+  (c) möglichst **nichtlinear** von Key und Input abhängt.
+→ Warum nichtlinear? Die Vorlesung zeigt an AES: Greift man direkt die **lineare**
+  Schlüsseladdition an (XOR), sind wegen der XOR-Symmetrie **mindestens zwei
+  Hypothesen gleich wahrscheinlich**. Bei AES löst das die nichtlineare **S-Box**.
+→ **ChaCha hat keine S-Box.** Die einzige Nichtlinearität in ARX ist die **modulare
+  Addition**. Unser erster angreifbarer Zwischenwert ist deshalb Op 2 der Quarter-Round,
+  `HW(d ⊕ (const + s[4+j]))` (§3), die unteren Wörter später über die Addition Op 3 (§6).
+→ Teil-Key statt Gesamt-Key: wir greifen **ein 32-bit-Wort pro Spalte** an, byte-/
+  bitweise — nie den ganzen 256-bit-Key auf einmal.
+→ Die von der Vorlesung gewarnte Komplement-Ambiguität taucht hier real als **globales
+  α-Vorzeichen** auf (§7) — wir lösen sie erst ganz am Ende per Re-Encryption.
+
+**Schritt 2 — Modell wählen.**
+
+→ Vorlesungsregel: HW oder HD genügen für dieses Target.
+→ Wir nehmen **HW**, nicht HD. Warum? Die Register werden pro Instruktions-Zyklus
+  effektiv genullt, also zählt das HW des **frisch geladenen Werts**, nicht die Distanz
+  zum Vorwert. (Hätte das Target stattdessen alte Registerinhalte überschrieben, wäre
+  HD das richtige Modell — das ist der Unterschied, den Vorlesung 1 benennt.)
+→ **Feinheit:** Der Chip leakt das HW des **ganzen 32-bit-Worts**, nicht eines einzelnen
+  Bytes — das wird in Schritt 4 entscheidend.
+
+**Schritt 3 — Messen (n Traces, n verschiedene Eingaben).**
+
+→ Vorlesungsregel: **fester Key, n zufällige Klartexte**, 500–100 000 Traces.
+→ **ChaCha-Besonderheit:** Der Klartext hilft *nicht* — er wird erst ganz am Ende mit
+  dem fertigen Keystream ge-XORt und berührt die erste Runde nicht. Die variierende
+  **bekannte** Größe ist stattdessen **Counter/Nonce im State** (`s12..s15`).
+→ Warum muss überhaupt etwas variieren? Vorlesung 2: Ist die Modellspalte **konstant**,
+  ist ihre Varianz 0 und `r` undefiniert — genau deshalb scheitert der „naive"
+  Angriffspunkt `const + key` (§3). Counter/Nonce liefern die nötige Streuung.
+→ Unser Datensatz: **1000 Traces × 5000 Samples**, fester Key, pro Trace neuer
+  zufälliger Counter + Nonce (+ Klartext, nur für die Ground-Truth-Kontrolle).
+
+**Schritt 4 — Hypothetische Zwischenwerte berechnen.**
+
+→ Vorlesungsregel (AES): 8-bit-Subkey → **256 Hypothesen**, je das HW des
+  Zwischenwerts.
+→ Wir weichen hier bewusst ab. Warum? Weil der Chip das **Voll-Wort-HW** leakt, hätte
+  ein 8-Bit-Byte-Modell 24 von 32 Bit als Rauschen → bei 1000 Traces zu schwach (§4,
+  grauer Kasten). Stattdessen das **Bit-Vorzeichen-Verfahren**: Da die Leckage für die
+  XOR-Stufe `HW(d ⊕ W)` ist, verrät das **Vorzeichen** von `corr(trace, bit_i(d))`
+  jedes Bit von `W` einzeln — unter Einsatz *aller* Traces pro Bit. Für die ADD-Stufe
+  dasselbe Prinzip bitweise LSB→MSB mit fortgeschaltetem **Carry** (§6).
+→ Das ist kein Widerspruch zur Vorlesung, sondern eine an die ARX-/Voll-Wort-Leckage
+  angepasste Variante desselben Grundgedankens „Hypothese → HW-Modell".
+
+**Schritt 5 — Pearson-Korrelation rechnen.**
+
+→ Vorlesungsregel: für jeden Zeitpunkt die Korrelation Modell ↔ Messung; die richtige
+  Hypothese sticht heraus.
+→ Umsetzung: `corr_all` (§2) rechnet alle 5000 Zeitpunkte **vektorisiert** in einem
+  Schritt. Der **Point-of-Interest** ist das Sample mit maximalem `|r|` (§5); die vier
+  Spalten-QRs liegen zeitlich gestaffelt bei ~725/989/1257/1505.
+
+**Finaler Schritt — Interpretieren & verifizieren.**
+
+→ Vorlesung 2/3: `r` ist bei wenig Traces nur ein **Schätzwert** (Rauschen), deshalb
+  kann eine richtige Hypothese unter- oder eine falsche überschätzt werden.
+→ Wir machen die Bewertung daher **hart statt per Rang**: Key zusammensetzen und per
+  **Re-Encryption** gegen ein gespeichertes `(pt, ct)`-Paar prüfen (§7). Stimmt es, ist
+  der Key garantiert korrekt — und die α-Vorzeichen-Ambiguität aus Schritt 1 ist gelöst.
+
+### Begründung der Trace-Zahl (Vorlesung 2/3)
+
+→ Vorlesung: Zahl der Traces so lang erhöhen, bis sich die richtige Hypothese **klar
+  abhebt**; grober Bereich 500–100 000. Rauschen mittelt sich mit mehr Traces heraus
+  (SNR steigt).
+→ Bei uns: Die XOR-Stufe ist schon bei 1000 Traces sehr klar getrennt (§4, §9). Die
+  **ADD-Stufe** hat niedrigeres `|r|` (Carry verschmiert das Bit-Signal) und ist die
+  kritische Stufe — genau der von der Vorlesung beschriebene „zu wenige Traces →
+  Schätzung von µ unsicher"-Effekt. Auf diesem Capture reichen 1000 Traces für **beide**
+  Stufen (32/32, §8); bei schwächerem SNR verlangt die ADD-Stufe zuerst mehr. Faustregel
+  `n ∼ 1/ρ²` (§9).
+
+### Kurz: Was ist Vorlesung, was ist eigene Herleitung?
+
+| Baustein | Quelle |
+|---|---|
+| HW-Modell, Pearson, 5-Schritt-Rezept, PoI, „mehr Traces bei schlechtem SNR" | Vorlesung 1–3 (direkt übernommen) |
+| XOR ist linear → Komplement-/Vorzeichen-Ambiguität | Vorlesung 3 (an AES gezeigt), bei uns als α-Sign |
+| **Modulare Addition als nichtlinearer Angriffspunkt** (keine S-Box) | eigene Herleitung für ChaCha |
+| **Counter/Nonce** statt Klartext als variierende Bekannte | eigene Herleitung für ChaCha |
+| **Bit-Vorzeichen** statt 256-Byte-Hypothesen (Voll-Wort-Leckage), **Carry**-Rekonstruktion | eigene Anpassung an ARX |
+| Verifikation per Re-Encryption, α-Auflösung | eigene Umsetzung |
