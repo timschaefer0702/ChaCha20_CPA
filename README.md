@@ -4,6 +4,8 @@ Side-Channel-Projekt mit dem **ChipWhisperer-Lite (STM32F3-Target, `CWLITEARM`)*
 ChaCha20 (IETF-Variante, RFC 8439) als SimpleSerial-Firmware, plus ein
 Jupyter-Notebook zum Bauen, Flashen, Validieren und Aufnehmen von Traces.
 
+**Aktuelle Arbeit:** [Stand und Einstieg](attack/README.md) · [Arbeitsplan](attack/PLAN.md) · [Angriffstheorie](docs/CPA-Angriffsmodell-und-Ablauf.md). Die alten Messreihen und ihre Validierung bleiben als historische Baseline dokumentiert.
+
 ## Struktur
 
 ```
@@ -51,11 +53,11 @@ Dann `Jupyter/user/ChaCha20 - Test (HARDWARE).ipynb` öffnen und alle Zellen
 ausführen. Das Notebook baut die Firmware selbst (`make` in
 `firmware/mcu/simpleserial-chacha20`) und flasht sie auf das Target.
 
-Für die **nächste unabhängige CPA-Messreihe** zuerst das
-[Validierungsprotokoll](docs/CPA-Validierungsprotokoll.md) lesen. Die vorbereitete
-Aufnahme speichert einen neuen Datensatz und den Testschlüssel getrennt; die
-bestehenden Traces bleiben erhalten. Die festgelegte Offline-Auswertung steht in
-[`Jupyter/user/cpa_frozen.py`](Jupyter/user/cpa_frozen.py).
+Die **abgeschlossene zweite CPA-Messreihe** ist im
+[Validierungsprotokoll](docs/CPA-Validierungsprotokoll.md) und in der
+[Auswertung](docs/CPA-Validierung-2026-10-26.md) dokumentiert. Ihr eingefrorenes
+Skript liegt in [`Jupyter/user/cpa_frozen.py`](Jupyter/user/cpa_frozen.py).
+Für den nächsten Versuch mit festem Counter gilt der [neue Arbeitsplan](attack/PLAN.md).
 
 Firmware manuell bauen:
 

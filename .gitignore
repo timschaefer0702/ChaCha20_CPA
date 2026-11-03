@@ -28,3 +28,7 @@ __pycache__/
 # --- unabhängige CPA-Prüfung: bis zur Auswertung lokal behalten ---
 Jupyter/user/chacha20_traces_validation.npz
 Jupyter/user/chacha20_validation_key.bin
+
+# Neue lokale ChipWhisperer-Messreihen und getrennte Laborschlüssel
+attack/data/*.npz
+attack/data/*.bin

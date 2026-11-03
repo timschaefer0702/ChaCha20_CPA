@@ -50,15 +50,14 @@ def make_traces(rng, count, variable_counter, nonce_mode):
         # ändert sich nur das niederwertige Nonce-Wort.
         public[:, 1] = np.arange(count, dtype=np.uint32)
         public[:, 2:] = 0
-    elif nonce_mode == "spread":
-        # Für die Laborfrage variieren alle drei Nonce-Wörter. Die erste
-        # Komponente ist eine Permutation eines 32-Bit-Zählers und damit
-        # eindeutig; alle Bytes ändern sich bereits bei wenigen Traces.
-        indices = np.arange(count, dtype=np.uint32)
-        for col in range(1, 4):
-            public[:, col] = indices * np.uint32(0x9E3779B1 + 2 * col) + np.uint32(0x12345678 * col)
+    elif nonce_mode == "random":
+        # Die drei 32-Bit-Wörter stammen unverändert aus dem Zufallsgenerator.
+        # Die Werte werden als öffentliche Eingaben zusammen mit den Traces
+        # gespeichert. Doppelte 96-Bit-Nonces werden im Versuch abgewiesen.
+        if len(np.unique(public[:, 1:4], axis=0)) != count:
+            raise ValueError("Zufalls-Nonces enthalten eine Wiederholung")
     else:
-        raise ValueError("nonce_mode muss 'sequential' oder 'spread' sein")
+        raise ValueError("nonce_mode muss 'sequential' oder 'random' sein")
 
     leak_d = np.empty((count, 4, 4), dtype=np.uint8)
     leak_b = np.empty_like(leak_d)
@@ -262,6 +261,6 @@ if __name__ == "__main__":
     parser.add_argument("--traces", type=int, default=512)
     parser.add_argument("--seed", type=int, default=20261028)
     args = parser.parse_args()
-    run(args.traces, False, "spread", args.seed)
+    run(args.traces, False, "random", args.seed)
     run(args.traces, False, "sequential", args.seed)
-    run(args.traces, True, "spread", args.seed)
+    run(args.traces, True, "random", args.seed)
